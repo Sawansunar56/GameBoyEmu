@@ -1,0 +1,4 @@
+-I./vendor/SDL2/include
+-I./vendor/SDL2_ttf/include
+-I./vendor/check
+-DSDL_MAIN_HANDLED

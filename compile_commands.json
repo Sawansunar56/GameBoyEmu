@@ -1,0 +1,13 @@
+[
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/emu.obj -c F:/Projects/C/gba_emu/src/emu.c", 
+"file": "F:/Projects/C/gba_emu/src/emu.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/main.obj -c F:/Projects/C/gba_emu/src/main.c", 
+"file": "F:/Projects/C/gba_emu/src/main.c"
+},
+]

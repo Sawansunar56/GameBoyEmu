@@ -1,0 +1,20 @@
+IndentWidth: 2
+SortIncludes:    Never
+BinPackParameters: false
+BinPackArguments: false
+AlignConsecutiveDeclarations: false
+AlignConsecutiveAssignments: true
+AlignAfterOpenBracket: Align
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: true
+  AfterClass: true
+  AfterFunction: true
+  AfterControlStatement: true
+  AfterNamespace: true
+  BeforeElse: true
+  BeforeCatch: false
