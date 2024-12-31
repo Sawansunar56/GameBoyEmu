@@ -55,7 +55,17 @@ function void fetch_data()
   }
 }
 
-function void execute() { printf("Not executing yet\n"); }
+function void execute() 
+{ 
+  IN_PROC proc = inst_get_processor(ctx.cur_inst->type);
+
+  if(!proc) {
+    NO_IMPL
+  }
+
+  proc(&ctx);
+  // printf("Not executing yet\n"); 
+}
 
 b8 cpu_step()
 {
