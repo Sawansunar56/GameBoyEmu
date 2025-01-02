@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "emu.h"
+#include "base_core.h"
 
 function void proc_none(cpu_context *ctx)
 {
@@ -7,7 +8,51 @@ function void proc_none(cpu_context *ctx)
   exit(-7);
 }
 
-function void proc_ld(cpu_context *ctx) {}
+function void proc_di(cpu_context *ctx) { ctx->int_master_enabled = false; }
+
+function void proc_ld(cpu_context *ctx)
+{
+  if (ctx->dest_is_mem)
+  {
+
+    if (ctx->cur_inst->reg_2 >= RT_AF)
+    {
+      emu_cycles(1);
+      bus_write16(ctx->mem_dest, ctx->fetched_data);
+    }
+    else
+    {
+      bus_write();
+    }
+  }
+
+  cpu_set_reg(ctx->cur_inst->reg_1, ctx->fetched_data);
+}
+
+void cpu_set_flags(cpu_context *ctx, char z, char n, char h, char c)
+{
+  if (z != -1)
+  {
+    BIT_SET(ctx->regs.f, 7, z);
+  }
+  if (n != -1)
+  {
+    BIT_SET(ctx->regs.f, 6, n);
+  }
+  if (h != -1)
+  {
+    BIT_SET(ctx->regs.f, 5, h);
+  }
+  if (c != -1)
+  {
+    BIT_SET(ctx->regs.f, 4, c);
+  }
+}
+function void proc_xor(cpu_context *ctx)
+{
+  ctx->regs.a ^= ctx->fetched_data & 0xff;
+  cpu_set_flags(ctx, ctx->regs.a, 0, 0, 0);
+}
 
 function b8 check_cond(cpu_context *ctx)
 {
@@ -40,15 +85,15 @@ function void proc_jp(cpu_context *ctx)
   }
 }
 
-function void proc_nop(cpu_context *ctx) 
-{
-}
+function void proc_nop(cpu_context *ctx) {}
 
 glob IN_PROC processors[] = {
     [IN_NONE] = proc_none,
     [IN_NOP]  = proc_nop,
     [IN_LD]   = proc_ld,
     [IN_JP]   = proc_jp,
+    [IN_DI]   = proc_di,
+    [IN_XOR]  = proc_xor,
 };
 
 IN_PROC inst_get_processor(in_type type) { return processors[type]; }

@@ -9,13 +9,17 @@ instruction instructions[0x100] = {[0x00] = {IN_NOP, AM_IMP},
 
                                    [0xAF] = {IN_XOR, AM_R, RT_A},
 
-                                   [0xC3] = {IN_JP, AM_D16}};
+                                   [0xC3] = {IN_JP, AM_D16},
 
-instruction *instruction_by_opcode(u8 opcode)
-{
-  if (instructions[opcode].type == IN_NONE)
-  {
-    return NULL;
-  }
-  return &instructions[opcode];
-}
+                                   [0xF3] = {IN_DI}};
+
+instruction *instruction_by_opcode(u8 opcode) { return &instructions[opcode]; }
+
+char *inst_lookup[] = {
+    "<NONE>", "NOP", "LD",   "INC",  "DEC", "RLCA", "ADD", "RRCA", "STOP",
+    "RLA",    "JR",  "RRA",  "DAA",  "CPL", "SCF",  "CCF", "HALT", "ADC",
+    "SUB",    "SBC", "AND",  "XOR",  "OR",  "CP",   "POP", "JP",   "PUSH",
+    "RET",    "CB",  "CALL", "RETI", "LDH", "JPHL", "DI",  "EI",   "RST",
+};
+
+char *inst_name(in_type t) { return inst_lookup[t]; }
