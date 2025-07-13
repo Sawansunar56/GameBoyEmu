@@ -1,4 +1,4 @@
-IndentWidth: 2
+IndentWidth: 1
 SortIncludes:    Never
 BinPackParameters: false
 BinPackArguments: false

@@ -1,13 +1,73 @@
 [
 {
 "directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/bus.obj -c F:/Projects/C/gba_emu/src/bus.c", 
+"file": "F:/Projects/C/gba_emu/src/bus.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/cart.obj -c F:/Projects/C/gba_emu/src/cart.c", 
+"file": "F:/Projects/C/gba_emu/src/cart.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/cpu.obj -c F:/Projects/C/gba_emu/src/cpu.c", 
+"file": "F:/Projects/C/gba_emu/src/cpu.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/cpu_fetch.obj -c F:/Projects/C/gba_emu/src/cpu_fetch.c", 
+"file": "F:/Projects/C/gba_emu/src/cpu_fetch.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/cpu_proc.obj -c F:/Projects/C/gba_emu/src/cpu_proc.c", 
+"file": "F:/Projects/C/gba_emu/src/cpu_proc.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/cpu_util.obj -c F:/Projects/C/gba_emu/src/cpu_util.c", 
+"file": "F:/Projects/C/gba_emu/src/cpu_util.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
 "command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/emu.obj -c F:/Projects/C/gba_emu/src/emu.c", 
 "file": "F:/Projects/C/gba_emu/src/emu.c"
 },
 
 {
 "directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/instructions.obj -c F:/Projects/C/gba_emu/src/instructions.c", 
+"file": "F:/Projects/C/gba_emu/src/instructions.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
 "command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/main.obj -c F:/Projects/C/gba_emu/src/main.c", 
 "file": "F:/Projects/C/gba_emu/src/main.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/ppu.obj -c F:/Projects/C/gba_emu/src/ppu.c", 
+"file": "F:/Projects/C/gba_emu/src/ppu.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/ram.obj -c F:/Projects/C/gba_emu/src/ram.c", 
+"file": "F:/Projects/C/gba_emu/src/ram.c"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/timer.obj -c F:/Projects/C/gba_emu/src/timer.c", 
+"file": "F:/Projects/C/gba_emu/src/timer.c"
 },
 ]
