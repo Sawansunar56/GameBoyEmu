@@ -4,6 +4,7 @@
 #include "emu.h"
 #include "cart.h"
 #include "cpu.h"
+#include "timer.h"
 #include "ui.h"
 #include <stop_token>
 #include <thread>
@@ -23,6 +24,8 @@ void delay(u32 ms) { SDL_Delay(ms); }
 
 void cpu_run(std::stop_token stop_token)
 {
+ timer_init();
+
  cpu_init();
 
  ctx.running = 1;
@@ -43,8 +46,6 @@ void cpu_run(std::stop_token stop_token)
    printf("CPU stopped\n");
    break;
   }
-
-  ctx.ticks++;
  }
  printf("from the worker thread\n");
 }
@@ -91,4 +92,13 @@ s32 emu_run(int argc, char **argv)
  return 0;
 }
 
-void emu_cycles(i32 cpu_cycles) {}
+void emu_cycles(i32 cpu_cycles)
+{
+ int n = cpu_cycles * 4;
+
+ for (int i = 0; i < n; i++)
+ {
+  ctx.ticks++;
+  timer_tick();
+ }
+}

@@ -1,17 +1,29 @@
 #include "cpu.h"
 #include "bus.h"
+#include "dbg.h"
 #include "emu.h"
 #include "instructions.h"
+#include "interrupts.h"
+#include "timer.h"
 #include <stdio.h>
+
 
 cpu_context ctx = {0};
 
-void fetch_data();
-
 void cpu_init()
 {
- ctx.regs.pc = 0x100;
- ctx.regs.a  = 0x01;
+ ctx.regs.pc             = 0x100;
+ ctx.regs.sp             = 0xfffe;
+ *((short *)&ctx.regs.a) = 0xb001;
+ *((short *)&ctx.regs.b) = 0x1300;
+ *((short *)&ctx.regs.d) = 0xD800;
+ *((short *)&ctx.regs.h) = 0x4d01;
+ ctx.ie_register         = 0;
+ ctx.int_flags           = 0;
+ ctx.int_master_enabled  = false;
+ ctx.enabling_ime        = false;
+
+ timer_get_context()->div = 0xABCC;
 }
 
 function void fetch_instruction()
@@ -40,7 +52,7 @@ b8 cpu_step()
   u16 pc = ctx.regs.pc;
 
   fetch_instruction();
-  // emu_cycles(1);
+  emu_cycles(1);
   fetch_data();
 
   char flags[16];
@@ -78,22 +90,30 @@ b8 cpu_step()
    exit(-7);
   }
 
+  dbg_update();
+  dbg_print();
+
   execute();
- } else {
+ }
+ else
+ {
   emu_cycles(1);
 
-  if(ctx.int_flags) {
-    ctx.halted = false;
+  if (ctx.int_flags)
+  {
+   ctx.halted = false;
   }
  }
 
- if(ctx.int_master_enabled) {
-   // cpu_handle_interrupts(&ctx);
-   ctx.enabling_ime = false;
+ if (ctx.int_master_enabled)
+ {
+  cpu_handle_interrupt(&ctx);
+  ctx.enabling_ime = false;
  }
 
- if(ctx.enabling_ime) {
-   ctx.int_master_enabled = true;
+ if (ctx.enabling_ime)
+ {
+  ctx.int_master_enabled = true;
  }
  return true;
 }
@@ -105,3 +125,7 @@ void cpu_set_ie_register(u8 n) { ctx.ie_register = n; }
 u8 cpu_get_int_flags() { return ctx.int_flags; }
 
 void cpu_set_int_flags(u8 value) { ctx.int_flags = value; }
+
+void cpu_request_interrupt(interrupt_type t) {
+  ctx.int_flags |= t;
+}

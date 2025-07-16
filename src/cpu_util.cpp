@@ -122,7 +122,6 @@ u8 cpu_read_reg8(reg_type rt)
  default:
   printf("**ERR INVALID REG8: %d\n", rt);
   NO_IMPL
-  return -1;
  }
 }
 

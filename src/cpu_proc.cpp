@@ -26,360 +26,13 @@ void cpu_set_flags(cpu_context *ctx, char z, char n, char h, char c)
  }
 }
 
-function bool is_16_bit(reg_type rt) { return rt >= RT_AF; }
-
 function void proc_none(cpu_context *ctx)
 {
  printf("INVALID INSTRUCTION\n");
  exit(-7);
 }
 
-function void proc_di(cpu_context *ctx) { ctx->int_master_enabled = false; }
-
-function void proc_ld(cpu_context *ctx)
-{
- if (ctx->dest_is_mem)
- {
-
-  if (is_16_bit(ctx->cur_inst->reg_2))
-  {
-   emu_cycles(1);
-   bus_write16(ctx->mem_dest, ctx->fetched_data);
-  }
-  else
-  {
-   bus_write(ctx->mem_dest, ctx->fetched_data);
-  }
-  emu_cycles(1);
-
-  return;
- }
-
- if (ctx->cur_inst->mode == AM_HL_SPR)
- {
-  u8 hflag =
-      (cpu_read_reg(ctx->cur_inst->reg_2) & 0xf) + (ctx->fetched_data & 0xf) >=
-      0x10;
-  u8 cflag = (cpu_read_reg(ctx->cur_inst->reg_2) & 0xff) +
-                 (ctx->fetched_data & 0xff) >=
-             0x100;
-
-  cpu_set_flags(ctx, 0, 0, hflag, cflag);
-  cpu_set_reg(ctx->cur_inst->reg_1,
-              cpu_read_reg(ctx->cur_inst->reg_2) + (char)ctx->fetched_data);
-
-  return;
- }
-
- cpu_set_reg(ctx->cur_inst->reg_1, ctx->fetched_data);
-}
-
-function void proc_ldh(cpu_context *ctx)
-{
- if (ctx->cur_inst->reg_1 == RT_A)
- {
-  cpu_set_reg(ctx->cur_inst->reg_1, bus_read(0xFF00 | ctx->fetched_data));
- }
- else
- {
-  bus_write(ctx->mem_dest, ctx->regs.a);
- }
-
- emu_cycles(1);
-}
-
-function b8 check_cond(cpu_context *ctx)
-{
- b8 z = CPU_FLAG_Z;
- b8 c = CPU_FLAG_C;
-
- switch (ctx->cur_inst->cond)
- {
- case CT_NONE:
-  return true;
- case CT_C:
-  return c;
- case CT_NC:
-  return !c;
- case CT_Z:
-  return z;
- case CT_NZ:
-  return !z;
- }
-
- return false;
-}
-
-function void goto_addr(cpu_context *ctx, u16 addr, b8 pushpc)
-{
- if (check_cond(ctx))
- {
-  if (pushpc)
-  {
-   emu_cycles(2);
-   stack_push16(ctx->regs.pc);
-  }
-
-  ctx->regs.pc = addr;
-  emu_cycles(1);
- }
-}
-
-function void proc_jp(cpu_context *ctx)
-{
- goto_addr(ctx, ctx->fetched_data, false);
-}
-
-function void proc_jr(cpu_context *ctx)
-{
- char rel = (char)(ctx->fetched_data & 0xff);
- u16 addr = ctx->regs.pc + rel;
- goto_addr(ctx, addr, false);
-}
-
-function void proc_call(cpu_context *ctx)
-{
- goto_addr(ctx, ctx->fetched_data, true);
-}
-
-function void proc_rst(cpu_context *ctx)
-{
- goto_addr(ctx, ctx->cur_inst->param, true);
-}
-
-function void proc_pop(cpu_context *ctx)
-{
- u16 lo = stack_pop();
- emu_cycles(1);
- u16 hi = stack_pop();
- emu_cycles(1);
-
- u16 n = (hi << 8) | lo;
-
- cpu_set_reg(ctx->cur_inst->reg_1, n);
-
- if (ctx->cur_inst->reg_1 == RT_AF)
- {
-  cpu_set_reg(ctx->cur_inst->reg_1, n & 0xfff0);
- }
-}
-
-function void proc_push(cpu_context *ctx)
-{
- u16 hi = (cpu_read_reg(ctx->cur_inst->reg_1) >> 8) & 0xff;
- emu_cycles(1);
- stack_push(hi);
-
- u16 lo = cpu_read_reg(ctx->cur_inst->reg_1) & 0xff;
- emu_cycles(1);
-
- stack_push(lo);
- emu_cycles(1);
-}
-
-function void proc_ret(cpu_context *ctx)
-{
- if (ctx->cur_inst->cond != CT_NONE)
- {
-  emu_cycles(1);
- }
- if (check_cond(ctx))
- {
-  u16 lo = stack_pop();
-  emu_cycles(1);
-  u16 hi = stack_pop();
-  emu_cycles(1);
-
-  u16 n        = (hi << 8) | lo;
-  ctx->regs.pc = n;
-  emu_cycles(1);
- }
-}
-
-function void proc_reti(cpu_context *ctx)
-{
- ctx->int_master_enabled = true;
- proc_ret(ctx);
-}
-
-
-function void proc_inc(cpu_context *ctx)
-{
- u16 val = cpu_read_reg(ctx->cur_inst->reg_1) + 1;
- if (is_16_bit(ctx->cur_inst->reg_1))
- {
-  emu_cycles(1);
- }
-
- if (ctx->cur_inst->reg_1 == RT_HL && ctx->cur_inst->mode == AM_MR)
- {
-  val = bus_read(cpu_read_reg(RT_HL)) + 1;
-  val &= 0xff;
-  bus_write(cpu_read_reg(RT_HL), val);
- }
- else
- {
-  cpu_set_reg(ctx->cur_inst->reg_1, val);
-  val = cpu_read_reg(ctx->cur_inst->reg_1);
- }
- if ((ctx->cur_opcode & 0x03) == 0x03)
- {
-  return;
- }
-
- cpu_set_flags(ctx, val == 0, 0, (val & 0x0f) == 0, -1);
-}
-function void proc_dec(cpu_context *ctx)
-{
- u16 val = cpu_read_reg(ctx->cur_inst->reg_1) - 1;
- if (is_16_bit(ctx->cur_inst->reg_1))
- {
-  emu_cycles(1);
- }
-
- if (ctx->cur_inst->reg_1 == RT_HL && ctx->cur_inst->mode == AM_MR)
- {
-  val = bus_read(cpu_read_reg(RT_HL)) - 1;
-  bus_write(cpu_read_reg(RT_HL), val);
- }
- else
- {
-  cpu_set_reg(ctx->cur_inst->reg_1, val);
-  val = cpu_read_reg(ctx->cur_inst->reg_1);
- }
- if ((ctx->cur_opcode & 0x0B) == 0x0B)
- {
-  return;
- }
-
- cpu_set_flags(ctx, val == 0, 1, (val & 0x0f) == 0x0f, -1);
-}
-
-function void proc_add(cpu_context *ctx)
-{
- u32 val = cpu_read_reg(ctx->cur_inst->reg_1) + ctx->fetched_data;
-
- b8 is_16bit = is_16_bit(ctx->cur_inst->reg_1);
-
- if (is_16bit)
- {
-  emu_cycles(1);
- }
-
- if (ctx->cur_inst->reg_1 == RT_SP)
- {
-  val = cpu_read_reg(ctx->cur_inst->reg_1) + (char)ctx->fetched_data;
- }
-
- int z = (val & 0xff) == 0;
- int h =
-     (cpu_read_reg(ctx->cur_inst->reg_1) & 0xf) + (ctx->fetched_data & 0xf) >=
-     0x10;
-
- int c = (int)(cpu_read_reg(ctx->cur_inst->reg_1) & 0xff) +
-             (int)(ctx->fetched_data & 0xff) >=
-         0x100;
-
- if (is_16bit)
- {
-  z = -1;
-  h = (cpu_read_reg(ctx->cur_inst->reg_1) & 0xfff) +
-          (ctx->fetched_data & 0xfff) >=
-      0x1000;
-  u32 n = ((u32)cpu_read_reg(ctx->cur_inst->reg_1)) + ((u32)ctx->fetched_data);
-  c     = n >= 0x10000;
- }
-
- if (ctx->cur_inst->reg_1 == RT_SP)
- {
-  z = 0;
-  int h =
-      (cpu_read_reg(ctx->cur_inst->reg_1) & 0xf) + (ctx->fetched_data & 0xf) >=
-      0x10;
-
-  int c = (int)(cpu_read_reg(ctx->cur_inst->reg_1) & 0xff) +
-              (int)(ctx->fetched_data & 0xff) >
-          0x100;
- }
-
- cpu_set_reg(ctx->cur_inst->reg_1, val & 0xffff);
- cpu_set_flags(ctx, z, 0, h, c);
-}
-
-function void proc_adc(cpu_context *ctx)
-{
- u16 u = ctx->fetched_data;
- u16 a = ctx->regs.a;
- u16 c = CPU_FLAG_C;
-
- ctx->regs.a = (a + u + c) & 0xff;
-
- cpu_set_flags(ctx,
-               ctx->regs.a == 0,
-               0,
-               (a & 0xf) + (u & 0xf) + c > 0xf,
-               a + u + c > 0xff);
-}
-
-function void proc_sub(cpu_context *ctx)
-{
- u16 val = cpu_read_reg(ctx->cur_inst->reg_1) - ctx->fetched_data;
-
- int z = val == 0;
- int h = ((int)cpu_read_reg(ctx->cur_inst->reg_1) & 0xf) -
-             ((int)ctx->fetched_data & 0xf) <
-         0;
- int c =
-     ((int)cpu_read_reg(ctx->cur_inst->reg_1)) - ((int)ctx->fetched_data) < 0;
-
- cpu_set_reg(ctx->cur_inst->reg_1, val);
- cpu_set_flags(ctx, z, 1, h, c);
-}
-
-function void proc_sbc(cpu_context *ctx)
-{
- u8 val = ctx->fetched_data + CPU_FLAG_C;
-
- int z = cpu_read_reg(ctx->cur_inst->reg_1) - val == 0;
- int h = ((int)cpu_read_reg(ctx->cur_inst->reg_1) & 0xf) -
-             ((int)ctx->fetched_data & 0xf) - ((int)CPU_FLAG_C) <
-         0;
- int c = ((int)cpu_read_reg(ctx->cur_inst->reg_1)) - ((int)ctx->fetched_data) -
-             ((int)CPU_FLAG_C) <
-         0;
-
- cpu_set_reg(ctx->cur_inst->reg_1, cpu_read_reg(ctx->cur_inst->reg_1) - val);
- cpu_set_flags(ctx, z, 1, h, c);
-}
-
-function void proc_and(cpu_context *ctx)
-{
- ctx->regs.a &= ctx->fetched_data;
- cpu_set_flags(ctx, ctx->regs.a == 0, 0, 1, 0);
-}
-
-function void proc_xor(cpu_context *ctx)
-{
- ctx->regs.a ^= ctx->fetched_data & 0xff;
- cpu_set_flags(ctx, ctx->regs.a == 0, 0, 0, 0);
-}
-
-function void proc_or(cpu_context *ctx)
-{
- ctx->regs.a |= ctx->fetched_data & 0xff;
- cpu_set_flags(ctx, ctx->regs.a == 0, 0, 0, 0);
-}
-
-function void proc_cp(cpu_context *ctx)
-{
- int n = (int)ctx->regs.a - (int)ctx->fetched_data;
-
- cpu_set_flags(ctx,
-               n == 0,
-               1,
-               ((int)ctx->regs.a & 0x0f) - ((int)ctx->fetched_data & 0x0f) < 0,
-               n < 0);
-}
+function void proc_nop(cpu_context *ctx) {}
 
 reg_type rt_lookup[] = {
   RT_B,
@@ -400,7 +53,6 @@ reg_type decode_reg(u8 reg) {
   return rt_lookup[reg];
 }
 
-function void proc_nop(cpu_context *ctx) {}
 function void proc_cb(cpu_context *ctx) {
   u8 op = ctx->fetched_data;
   reg_type reg = decode_reg(op & 0b111);
@@ -529,7 +181,6 @@ function void proc_rrca(cpu_context *ctx) {
   cpu_set_flags(ctx, 0, 0, 0, b);
 }
 
-
 function void proc_rla(cpu_context *ctx) {
   u8 u = ctx->regs.a;
   u8 cf = CPU_FLAG_C;
@@ -537,6 +188,29 @@ function void proc_rla(cpu_context *ctx) {
 
   ctx->regs.a = (u << 1) | cf;
   cpu_set_flags(ctx, 0, 0, 0, c);
+}
+
+function void proc_stop(cpu_context *ctx) {
+    fprintf(stderr, "STOPPING!\n");
+    NO_IMPL
+}
+
+function void proc_daa(cpu_context *ctx) {
+    u8 u = 0;
+    int fc = 0;
+
+    if (CPU_FLAG_H || (!CPU_FLAG_N && (ctx->regs.a & 0xF) > 9)) {
+        u = 6;
+    }
+
+    if (CPU_FLAG_C || (!CPU_FLAG_N && ctx->regs.a > 0x99)) {
+        u |= 0x60;
+        fc = 1;
+    }
+
+    ctx->regs.a += CPU_FLAG_N ? -u : u;
+
+    cpu_set_flags(ctx, ctx->regs.a == 0, -1, 0, fc);
 }
 
 function void proc_cpl(cpu_context *ctx) {
@@ -566,32 +240,369 @@ function void proc_rra(cpu_context *ctx) {
     cpu_set_flags(ctx, 0, 0, 0, new_c);
 }
 
-function void proc_stop(cpu_context *ctx) {
-    fprintf(stderr, "STOPPING!\n");
-    NO_IMPL
+function void proc_and(cpu_context *ctx)
+{
+ ctx->regs.a &= ctx->fetched_data;
+ cpu_set_flags(ctx, ctx->regs.a == 0, 0, 1, 0);
 }
 
-function void proc_daa(cpu_context *ctx) {
-    u8 u = 0;
-    int fc = 0;
-
-    if (CPU_FLAG_H || (!CPU_FLAG_N && (ctx->regs.a & 0xF) > 9)) {
-        u = 6;
-    }
-
-    if (CPU_FLAG_C || (!CPU_FLAG_N && ctx->regs.a > 0x99)) {
-        u |= 0x60;
-        fc = 1;
-    }
-
-    ctx->regs.a += CPU_FLAG_N ? -u : u;
-
-    cpu_set_flags(ctx, ctx->regs.a == 0, -1, 0, fc);
+function void proc_xor(cpu_context *ctx)
+{
+ ctx->regs.a ^= ctx->fetched_data & 0xff;
+ cpu_set_flags(ctx, ctx->regs.a == 0, 0, 0, 0);
 }
+
+function void proc_or(cpu_context *ctx)
+{
+ ctx->regs.a |= ctx->fetched_data & 0xff;
+ cpu_set_flags(ctx, ctx->regs.a == 0, 0, 0, 0);
+}
+
+function void proc_cp(cpu_context *ctx)
+{
+ int n = (int)ctx->regs.a - (int)ctx->fetched_data;
+
+ cpu_set_flags(ctx,
+               n == 0,
+               1,
+               ((int)ctx->regs.a & 0x0f) - ((int)ctx->fetched_data & 0x0f) < 0,
+               n < 0);
+}
+
+function void proc_di(cpu_context *ctx) { ctx->int_master_enabled = false; }
 
 function void proc_ei(cpu_context *ctx) {
     ctx->enabling_ime = true;
 }
+
+function bool is_16_bit(reg_type rt) { return rt >= RT_AF; }
+
+
+function void proc_ld(cpu_context *ctx)
+{
+ if (ctx->dest_is_mem)
+ {
+
+  if (is_16_bit(ctx->cur_inst->reg_2))
+  {
+   emu_cycles(1);
+   bus_write16(ctx->mem_dest, ctx->fetched_data);
+  }
+  else
+  {
+   bus_write(ctx->mem_dest, ctx->fetched_data);
+  }
+  emu_cycles(1);
+
+  return;
+ }
+
+ if (ctx->cur_inst->mode == AM_HL_SPR)
+ {
+  u8 hflag =
+      (cpu_read_reg(ctx->cur_inst->reg_2) & 0xf) + (ctx->fetched_data & 0xf) >=
+      0x10;
+  u8 cflag = (cpu_read_reg(ctx->cur_inst->reg_2) & 0xff) +
+                 (ctx->fetched_data & 0xff) >=
+             0x100;
+
+  cpu_set_flags(ctx, 0, 0, hflag, cflag);
+  cpu_set_reg(ctx->cur_inst->reg_1,
+              cpu_read_reg(ctx->cur_inst->reg_2) + (char)ctx->fetched_data);
+
+  return;
+ }
+
+ cpu_set_reg(ctx->cur_inst->reg_1, ctx->fetched_data);
+}
+
+function void proc_ldh(cpu_context *ctx)
+{
+ if (ctx->cur_inst->reg_1 == RT_A)
+ {
+  cpu_set_reg(ctx->cur_inst->reg_1, bus_read(0xFF00 | ctx->fetched_data));
+ }
+ else
+ {
+  bus_write(ctx->mem_dest, ctx->regs.a);
+ }
+
+ emu_cycles(1);
+}
+
+function b8 check_cond(cpu_context *ctx)
+{
+ b8 z = CPU_FLAG_Z;
+ b8 c = CPU_FLAG_C;
+
+ switch (ctx->cur_inst->cond)
+ {
+ case CT_NONE:
+  return true;
+ case CT_C:
+  return c;
+ case CT_NC:
+  return !c;
+ case CT_Z:
+  return z;
+ case CT_NZ:
+  return !z;
+ }
+
+ return false;
+}
+
+function void goto_addr(cpu_context *ctx, u16 addr, b8 pushpc)
+{
+ if (check_cond(ctx))
+ {
+  if (pushpc)
+  {
+   emu_cycles(2);
+   stack_push16(ctx->regs.pc);
+  }
+
+  ctx->regs.pc = addr;
+  emu_cycles(1);
+ }
+}
+
+function void proc_jp(cpu_context *ctx)
+{
+ goto_addr(ctx, ctx->fetched_data, false);
+}
+
+function void proc_jr(cpu_context *ctx)
+{
+ i8 rel = (char)(ctx->fetched_data & 0xff);
+ u16 addr = ctx->regs.pc + rel;
+ goto_addr(ctx, addr, false);
+}
+
+function void proc_call(cpu_context *ctx)
+{
+ goto_addr(ctx, ctx->fetched_data, true);
+}
+
+function void proc_rst(cpu_context *ctx)
+{
+ goto_addr(ctx, ctx->cur_inst->param, true);
+}
+
+function void proc_ret(cpu_context *ctx)
+{
+ if (ctx->cur_inst->cond != CT_NONE)
+ {
+  emu_cycles(1);
+ }
+ if (check_cond(ctx))
+ {
+  u16 lo = stack_pop();
+  emu_cycles(1);
+  u16 hi = stack_pop();
+  emu_cycles(1);
+
+  u16 n        = (hi << 8) | lo;
+  ctx->regs.pc = n;
+  emu_cycles(1);
+ }
+}
+
+function void proc_reti(cpu_context *ctx)
+{
+ proc_ret(ctx);
+ ctx->int_master_enabled = true;
+}
+
+function void proc_pop(cpu_context *ctx)
+{
+ u16 lo = stack_pop();
+ emu_cycles(1);
+ u16 hi = stack_pop();
+ emu_cycles(1);
+
+ u16 n = (hi << 8) | lo;
+
+ cpu_set_reg(ctx->cur_inst->reg_1, n);
+
+ if (ctx->cur_inst->reg_1 == RT_AF)
+ {
+  cpu_set_reg(ctx->cur_inst->reg_1, n & 0xfff0);
+ }
+}
+
+function void proc_push(cpu_context *ctx)
+{
+ u16 hi = (cpu_read_reg(ctx->cur_inst->reg_1) >> 8) & 0xff;
+ emu_cycles(1);
+ stack_push(hi);
+
+ u16 lo = cpu_read_reg(ctx->cur_inst->reg_1) & 0xff;
+ emu_cycles(1);
+
+ stack_push(lo);
+ emu_cycles(1);
+}
+
+
+function void proc_inc(cpu_context *ctx)
+{
+ u16 val = cpu_read_reg(ctx->cur_inst->reg_1) + 1;
+ if (is_16_bit(ctx->cur_inst->reg_1))
+ {
+  emu_cycles(1);
+ }
+
+ if (ctx->cur_inst->reg_1 == RT_HL && ctx->cur_inst->mode == AM_MR)
+ {
+  val = bus_read(cpu_read_reg(RT_HL)) + 1;
+  val &= 0xff;
+  bus_write(cpu_read_reg(RT_HL), val);
+ }
+ else
+ {
+  cpu_set_reg(ctx->cur_inst->reg_1, val);
+  val = cpu_read_reg(ctx->cur_inst->reg_1);
+ }
+ if ((ctx->cur_opcode & 0x03) == 0x03)
+ {
+  return;
+ }
+
+ cpu_set_flags(ctx, val == 0, 0, (val & 0x0f) == 0, -1);
+}
+function void proc_dec(cpu_context *ctx)
+{
+ u16 val = cpu_read_reg(ctx->cur_inst->reg_1) - 1;
+ if (is_16_bit(ctx->cur_inst->reg_1))
+ {
+  emu_cycles(1);
+ }
+
+ if (ctx->cur_inst->reg_1 == RT_HL && ctx->cur_inst->mode == AM_MR)
+ {
+  val = bus_read(cpu_read_reg(RT_HL)) - 1;
+  bus_write(cpu_read_reg(RT_HL), val);
+ }
+ else
+ {
+  cpu_set_reg(ctx->cur_inst->reg_1, val);
+  val = cpu_read_reg(ctx->cur_inst->reg_1);
+ }
+ if ((ctx->cur_opcode & 0x0B) == 0x0B)
+ {
+  return;
+ }
+
+ cpu_set_flags(ctx, val == 0, 1, (val & 0x0f) == 0x0f, -1);
+}
+
+
+function void proc_sub(cpu_context *ctx)
+{
+ u16 val = cpu_read_reg(ctx->cur_inst->reg_1) - ctx->fetched_data;
+
+ int z = val == 0;
+ int h = ((int)cpu_read_reg(ctx->cur_inst->reg_1) & 0xf) -
+             ((int)ctx->fetched_data & 0xf) <
+         0;
+ int c =
+     ((int)cpu_read_reg(ctx->cur_inst->reg_1)) - ((int)ctx->fetched_data) < 0;
+
+ cpu_set_reg(ctx->cur_inst->reg_1, val);
+ cpu_set_flags(ctx, z, 1, h, c);
+}
+
+function void proc_sbc(cpu_context *ctx)
+{
+ u8 val = ctx->fetched_data + CPU_FLAG_C;
+
+ int z = cpu_read_reg(ctx->cur_inst->reg_1) - val == 0;
+ int h = ((int)cpu_read_reg(ctx->cur_inst->reg_1) & 0xf) -
+             ((int)ctx->fetched_data & 0xf) - ((int)CPU_FLAG_C) <
+         0;
+ int c = ((int)cpu_read_reg(ctx->cur_inst->reg_1)) - ((int)ctx->fetched_data) -
+             ((int)CPU_FLAG_C) < 0;
+
+ cpu_set_reg(ctx->cur_inst->reg_1, cpu_read_reg(ctx->cur_inst->reg_1) - val);
+ cpu_set_flags(ctx, z, 1, h, c);
+}
+
+function void proc_adc(cpu_context *ctx)
+{
+ u16 u = ctx->fetched_data;
+ u16 a = ctx->regs.a;
+ u16 c = CPU_FLAG_C;
+
+ ctx->regs.a = (a + u + c) & 0xff;
+
+ cpu_set_flags(ctx,
+               ctx->regs.a == 0,
+               0,
+               (a & 0xf) + (u & 0xf) + c > 0xf,
+               a + u + c > 0xff);
+}
+
+
+function void proc_add(cpu_context *ctx)
+{
+ u32 val = cpu_read_reg(ctx->cur_inst->reg_1) + ctx->fetched_data;
+
+ b8 is_16bit = is_16_bit(ctx->cur_inst->reg_1);
+
+ if (is_16bit)
+ {
+  emu_cycles(1);
+ }
+
+ if (ctx->cur_inst->reg_1 == RT_SP)
+ {
+  val = cpu_read_reg(ctx->cur_inst->reg_1) + (char)ctx->fetched_data;
+ }
+
+ int z = (val & 0xff) == 0;
+ int h =
+     (cpu_read_reg(ctx->cur_inst->reg_1) & 0xf) + (ctx->fetched_data & 0xf) >=
+     0x10;
+
+ int c = (int)(cpu_read_reg(ctx->cur_inst->reg_1) & 0xff) +
+             (int)(ctx->fetched_data & 0xff) >=
+         0x100;
+
+ if (is_16bit)
+ {
+  z = -1;
+  h = (cpu_read_reg(ctx->cur_inst->reg_1) & 0xfff) +
+          (ctx->fetched_data & 0xfff) >=
+      0x1000;
+  u32 n = ((u32)cpu_read_reg(ctx->cur_inst->reg_1)) + ((u32)ctx->fetched_data);
+  c     = n >= 0x10000;
+ }
+
+ if (ctx->cur_inst->reg_1 == RT_SP)
+ {
+  z = 0;
+  int h =
+      (cpu_read_reg(ctx->cur_inst->reg_1) & 0xf) + (ctx->fetched_data & 0xf) >=
+      0x10;
+
+  int c = (int)(cpu_read_reg(ctx->cur_inst->reg_1) & 0xff) +
+              (int)(ctx->fetched_data & 0xff) >=
+          0x100;
+ }
+
+ cpu_set_reg(ctx->cur_inst->reg_1, val & 0xffff);
+ cpu_set_flags(ctx, z, 0, h, c);
+}
+
+
+
+
+
+
+
+
+
 
 
 glob std::array<IN_PROC, IN_FINAL> processors = [] {

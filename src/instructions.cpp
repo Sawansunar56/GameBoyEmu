@@ -53,7 +53,8 @@ constinit std::array<instruction, 0x100> instructions = []() {
  arr[0x24] = {IN_INC, AM_R, RT_H};
  arr[0x25] = {IN_DEC, AM_R, RT_H};
  arr[0x26] = {IN_LD, AM_R_D8, RT_H};
- arr[0x27] = {IN_DAA}, arr[0x28] = {IN_JR, AM_D8, RT_NONE, RT_NONE, CT_Z};
+ arr[0x27] = {IN_DAA};
+ arr[0x28] = {IN_JR, AM_D8, RT_NONE, RT_NONE, CT_Z};
  arr[0x29] = {IN_ADD, AM_R_R, RT_HL, RT_HL};
  arr[0x2A] = {IN_LD, AM_R_HLI, RT_A, RT_HL};
  arr[0x2B] = {IN_DEC, AM_R, RT_HL};
@@ -293,6 +294,18 @@ std::vector<std::string> inst_lookup = {
     "RLA",    "JR",  "RRA",  "DAA",  "CPL", "SCF",  "CCF", "HALT", "ADC",
     "SUB",    "SBC", "AND",  "XOR",  "OR",  "CP",   "POP", "JP",   "PUSH",
     "RET",    "CB",  "CALL", "RETI", "LDH", "JPHL", "DI",  "EI",   "RST",
+    "IN_ERR",
+    "IN_RLC", 
+    "IN_RRC",
+    "IN_RL", 
+    "IN_RR",
+    "IN_SLA", 
+    "IN_SRA",
+    "IN_SWAP", 
+    "IN_SRL",
+    "IN_BIT", 
+    "IN_RES", 
+    "IN_SET"
 };
 
 std::string inst_name(in_type t) { return inst_lookup[t]; }

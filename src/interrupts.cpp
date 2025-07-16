@@ -34,4 +34,6 @@ void cpu_handle_interrupt(cpu_context *ctx)
 }
 
 
-void cpu_request_interrupt(interrupt_type t) {}
+// void cpu_request_interrupt(interrupt_type t) {
+//   ctx.int_flags |= t;
+// }
