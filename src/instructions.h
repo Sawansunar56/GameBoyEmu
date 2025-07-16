@@ -1,5 +1,6 @@
 #pragma once
 #include "base_core.h"
+#include <string>
 
 typedef enum
 {
@@ -95,7 +96,9 @@ typedef enum
   IN_SRL,
   IN_BIT,
   IN_RES,
-  IN_SET
+  IN_SET,
+
+  IN_FINAL // just checker
 } in_type;
 
 typedef enum
@@ -117,5 +120,8 @@ typedef struct
   u8 param;
 } instruction;
 
+struct cpu_context;
+
 instruction *instruction_by_opcode(u8 opcode);
-char *inst_name(in_type t);
+std::string inst_name(in_type t);
+std::string inst_to_str(cpu_context *ctx);

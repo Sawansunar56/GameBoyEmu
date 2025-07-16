@@ -5,6 +5,7 @@
 typedef struct {
     b8 paused;
     b8 running;
+    b8 die;
     u64 ticks;
 } emu_context;
 

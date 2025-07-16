@@ -17,7 +17,7 @@ typedef struct
  u16 sp;
 } cpu_registers;
 
-typedef struct
+struct cpu_context
 {
  cpu_registers regs;
 
@@ -31,8 +31,10 @@ typedef struct
  b8 stepping;
 
  b8 int_master_enabled;
+ b8 enabling_ime;
  u8 ie_register;
-} cpu_context;
+ u8 int_flags;
+};
 
 cpu_registers *cpu_get_regs();
 
@@ -40,14 +42,25 @@ void cpu_init();
 b8 cpu_step();
 
 typedef void (*IN_PROC)(cpu_context *);
+// using IN_PROC = void(*)(cpu_context*);
+// using IN_PROC = std::function<void(cpu_context *)>;
 IN_PROC inst_get_processor(in_type type);
 
 u16 cpu_read_reg(reg_type rt);
 void cpu_set_reg(reg_type rt, u16 val);
+
 #define CPU_FLAG_Z BIT(ctx->regs.f, 7)
+#define CPU_FLAG_N BIT(ctx->regs.f, 6)
 #define CPU_FLAG_C BIT(ctx->regs.f, 4)
+#define CPU_FLAG_H BIT(ctx->regs.f, 5)
 
 u8 cpu_get_ie_register();
 void cpu_set_ie_register(u8 n);
 
 void fetch_data();
+
+u8 cpu_read_reg8(reg_type rt);
+void cpu_set_reg8(reg_type rt, u8 val);
+
+u8 cpu_get_int_flags();
+void cpu_set_int_flags(u8 value);

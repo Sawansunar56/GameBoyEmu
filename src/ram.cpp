@@ -1,4 +1,5 @@
 #include "ram.h"
+#include <cstdlib>
 
 typedef struct
 {
@@ -15,7 +16,7 @@ u8 wram_read(u16 address)
   if (address >= 0x2000)
   {
     printf("INVALID WRAM ADDR %08X\n", address + 0xC000);
-    exit(-1);
+    std::exit(-1);
   }
 
   return ctx.wram[address];

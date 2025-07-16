@@ -1,8 +1,7 @@
 #pragma once
-#include <stdint.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdbool.h>
+#include <cstdint>
+#include <cstddef>
+#include <cstdio>
 
 typedef uint8_t  u8;
 typedef uint16_t u16;

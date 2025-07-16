@@ -1,3 +1,3 @@
 @echo off
 
-.\build\main.exe ".\roms\Tetris.gb"
+.\build\main.exe ".\roms\dmg-acid2.gb"

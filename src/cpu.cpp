@@ -2,6 +2,7 @@
 #include "bus.h"
 #include "emu.h"
 #include "instructions.h"
+#include <stdio.h>
 
 cpu_context ctx = {0};
 
@@ -39,17 +40,31 @@ b8 cpu_step()
   u16 pc = ctx.regs.pc;
 
   fetch_instruction();
-  emu_cycles(1);
+  // emu_cycles(1);
   fetch_data();
 
-  printf("%04X: %-7s (%02X %02X %02X) A: %02X BC: %02X%02X DE: %02X%02X HL: "
+  char flags[16];
+
+  sprintf(flags,
+          "%c%c%c%c",
+          ctx.regs.f & (1 << 7) ? 'Z' : '-',
+          ctx.regs.f & (1 << 6) ? 'N' : '-',
+          ctx.regs.f & (1 << 5) ? 'H' : '-',
+          ctx.regs.f & (1 << 4) ? 'C' : '-');
+
+  std::string inst = inst_to_str(&ctx);
+
+  printf("%08llX - %04X: %-12s (%02X %02X %02X) A: %02X F: %s BC: %02X%02X DE: "
+         "%02X%02X HL: "
          "%02x%02X\n",
+         emu_get_context()->ticks,
          pc,
-         inst_name(ctx.cur_inst->type),
+         inst.c_str(),
          ctx.cur_opcode,
          bus_read(pc + 1),
          bus_read(pc + 2),
          ctx.regs.a,
+         flags,
          ctx.regs.b,
          ctx.regs.c,
          ctx.regs.d,
@@ -64,6 +79,21 @@ b8 cpu_step()
   }
 
   execute();
+ } else {
+  emu_cycles(1);
+
+  if(ctx.int_flags) {
+    ctx.halted = false;
+  }
+ }
+
+ if(ctx.int_master_enabled) {
+   // cpu_handle_interrupts(&ctx);
+   ctx.enabling_ime = false;
+ }
+
+ if(ctx.enabling_ime) {
+   ctx.int_master_enabled = true;
  }
  return true;
 }
@@ -71,3 +101,7 @@ b8 cpu_step()
 u8 cpu_get_ie_register() { return ctx.ie_register; }
 
 void cpu_set_ie_register(u8 n) { ctx.ie_register = n; }
+
+u8 cpu_get_int_flags() { return ctx.int_flags; }
+
+void cpu_set_int_flags(u8 value) { ctx.int_flags = value; }

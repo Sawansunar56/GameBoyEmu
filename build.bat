@@ -1,5 +1,5 @@
 @echo off
-set SRC=..\src\*.c
+set SRC=..\src\*.cpp
 set LINKER_FLAGS=/out:main.exe /SUBSYSTEM:CONSOLE
 set BUILD_TYPE=Debug
 set LIBS=shell32.lib opengl32.lib gdi32.lib user32.lib SDL2.lib SDL2_ttf.lib
@@ -23,7 +23,7 @@ if not "%1" == "" (
 )
 
 if "%BUILD_TYPE%" == "Debug" (
-    set CFLAGS=/MDd /Zi /Od /DDEBUG
+    set CFLAGS=/MDd /Zi /Od /DDEBUG /std:c++20 /EHsc
     set LFLAGS=/DEBUG
 ) else if "%BUILD_TYPE%" == "Release" (
     set CFLAGS=/MD /Zi /O2 /DNDEBUG
@@ -39,3 +39,16 @@ link %LINKER_FLAGS% %LFLAGS% *.obj %LIBRARIES% %LIBS%
 ctime -end c_time.ctm
 
 popd
+
+REM set BUILD_TYPE=Debug
+REM if /I "%1"=="release" set BUILD_TYPE=Release
+REM
+REM pushd .\build
+REM
+REM ctime -begin c_time.ctm
+REM echo Building in %BUILD_TYPE% mode...
+REM msbuild gba_emu.vcxproj /p:Configuration=%BUILD_TYPE% /m
+REM
+REM ctime -end c_time.ctm
+REM
+REM popd

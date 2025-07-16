@@ -2,6 +2,7 @@
 #include "base_core.h"
 #include "cart.h"
 #include "cpu.h"
+#include "ram.h"
 
 // 0x0000 - 0x3FFF : ROM Bank 0
 // 0x4000 - 0x7FFF : ROM Bank 1 - Switchable
@@ -46,7 +47,8 @@ u8 bus_read(u16 address)
  else if (address < 0xfea0)
  {
   printf("UNSUPPORTED bus_read(%04X)\n", address);
-  NO_IMPL
+  // NO_IMPL
+  return 0x0;
  }
  else if (address < 0xff00)
  {
@@ -55,7 +57,8 @@ u8 bus_read(u16 address)
  else if (address < 0xff80)
  {
   printf("UNSUPPORTED bus_read(%04X)\n", address);
-  NO_IMPL
+  // NO_IMPL
+  return 0x0;
  }
  else if (address < 0xffff)
  {
@@ -76,7 +79,7 @@ void bus_write(u16 address, u8 value)
  {
   // Char/Map Data
   printf("UNSUPPORTED bus_write(%04X)\n", address);
-  NO_IMPL
+  // NO_IMPL
  }
  else if (address < 0xC000)
  {
@@ -92,7 +95,7 @@ void bus_write(u16 address, u8 value)
  else if (address < 0xFEA0)
  {
   printf("UNSUPPORTED bus_write(%04X)\n", address);
-  NO_IMPL
+  // NO_IMPL
  }
  else if (address < 0xFF00)
  {

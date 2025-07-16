@@ -1,3 +1,5 @@
+ -xc++
+-std=c++20
 -I./vendor/SDL2/include
 -I./vendor/SDL2_ttf/include
 -I./vendor/check
