@@ -60,7 +60,7 @@ u8 bus_read(u16 address)
   // NO_IMPL
   return io_read(address);
  }
- else if (address < 0xffff)
+ else if (address == 0xffff)
  {
   // CPU ENABLE REGISTER
    return cpu_get_ie_register();
