@@ -4,6 +4,7 @@
 #include "emu.h"
 #include "cart.h"
 #include "cpu.h"
+#include "dma.h"
 #include "timer.h"
 #include "ui.h"
 #include <stop_token>
@@ -83,6 +84,8 @@ s32 emu_run(int argc, char **argv)
  {
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
   ui_handle_events();
+
+  ui_update();
  }
 
  cpu_thread.request_stop();
@@ -94,11 +97,14 @@ s32 emu_run(int argc, char **argv)
 
 void emu_cycles(i32 cpu_cycles)
 {
- int n = cpu_cycles * 4;
-
- for (int i = 0; i < n; i++)
+ for (int i = 0; i < cpu_cycles; i++)
  {
-  ctx.ticks++;
-  timer_tick();
+  for (int n = 0; n < 4; n++)
+  {
+   ctx.ticks++;
+   timer_tick();
+  }
+
+  dma_tick();
  }
 }

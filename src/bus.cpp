@@ -2,8 +2,10 @@
 #include "base_core.h"
 #include "cart.h"
 #include "cpu.h"
+#include "dma.h"
 #include "ram.h"
 #include "io.h"
+#include "ppu.h"
 
 // 0x0000 - 0x3FFF : ROM Bank 0
 // 0x4000 - 0x7FFF : ROM Bank 1 - Switchable
@@ -23,13 +25,13 @@ u8 bus_read(u16 address)
 {
  if (address < 0x8000)
  {
+   // ROM Data
   return cart_read(address);
  }
  else if (address < 0xA000)
  {
   // char/ map data
-  printf("UNSUPPORTED bus_read(%04X)\n", address);
-  NO_IMPL
+   ppu_vram_read(address);
  }
  else if (address < 0xC000)
  {
@@ -43,13 +45,17 @@ u8 bus_read(u16 address)
  }
  else if (address < 0xFE00)
  {
+   // reserver echo ram..
   return 0;
  }
  else if (address < 0xfea0)
  {
-  printf("UNSUPPORTED bus_read(%04X)\n", address);
-  // NO_IMPL
-  return 0x0;
+   // OAM
+   if(dma_transferring()) {
+     return 0xff;
+   }
+
+   return ppu_oam_read(address);
  }
  else if (address < 0xff00)
  {
@@ -78,8 +84,7 @@ void bus_write(u16 address, u8 value)
  else if (address < 0xA000)
  {
   // Char/Map Data
-  printf("UNSUPPORTED bus_write(%04X)\n", address);
-  // NO_IMPL
+   ppu_vram_write(address, value);
  }
  else if (address < 0xC000)
  {
@@ -94,8 +99,10 @@ void bus_write(u16 address, u8 value)
  }
  else if (address < 0xFEA0)
  {
-  printf("UNSUPPORTED bus_write(%04X)\n", address);
-  // NO_IMPL
+   if(dma_transferring()) {
+     return;
+   }
+   ppu_oam_write(address, value);
  }
  else if (address < 0xFF00)
  {

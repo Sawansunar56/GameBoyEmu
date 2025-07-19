@@ -1,3 +1,3 @@
 @echo off
 
-.\build\main.exe ".\roms\02-interrupts.gb"
+.\build\main.exe ".\roms\07-jr,jp,call,ret,rst.gb"
