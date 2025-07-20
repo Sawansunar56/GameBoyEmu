@@ -5,6 +5,7 @@
 #include "cart.h"
 #include "cpu.h"
 #include "dma.h"
+#include "ppu.h"
 #include "timer.h"
 #include "ui.h"
 #include <stop_token>
@@ -26,8 +27,8 @@ void delay(u32 ms) { SDL_Delay(ms); }
 void cpu_run(std::stop_token stop_token)
 {
  timer_init();
-
  cpu_init();
+ ppu_init();
 
  ctx.running = 1;
  ctx.paused  = 0;
@@ -80,12 +81,18 @@ s32 emu_run(int argc, char **argv)
  // }
  std::jthread cpu_thread(cpu_run);
 
+ u32 prev_frame = 0;
  while (!ctx.die)
  {
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
   ui_handle_events();
 
-  ui_update();
+  if (prev_frame != ppu_get_context()->current_frame)
+  {
+   ui_update();
+  }
+
+  prev_frame = ppu_get_context()->current_frame;
  }
 
  cpu_thread.request_stop();
@@ -103,6 +110,7 @@ void emu_cycles(i32 cpu_cycles)
   {
    ctx.ticks++;
    timer_tick();
+   ppu_tick();
   }
 
   dma_tick();

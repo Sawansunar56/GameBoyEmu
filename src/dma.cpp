@@ -39,11 +39,6 @@ void dma_tick()
 
  ctx.byte++;
  ctx.active = ctx.byte < 0xA0;
-
- if(!ctx.active) {
-   printf("DMA DONE!\n");
-   std::this_thread::sleep_for(std::chrono::milliseconds(2000));
- }
 }
 
 b8 dma_transferring() { return ctx.active; }

@@ -7,3 +7,4 @@ glob constexpr s32 SCREEN_HEIGHT = 768;
 void ui_init();
 void ui_update();
 void ui_handle_events();
+u32 get_ticks();

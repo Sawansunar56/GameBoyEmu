@@ -33,6 +33,8 @@ typedef intptr_t  smm;
 #define glob            static
 #define locals          static
 
+#define PURE [[nodiscard]]
+
 // #define TRUE  1
 // #define FALSE 0
 

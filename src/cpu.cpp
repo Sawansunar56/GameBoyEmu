@@ -10,6 +10,8 @@
 
 cpu_context ctx = {0};
 
+#define CPU_DEBUG 0
+
 void cpu_init()
 {
  ctx.regs.pc             = 0x100;
@@ -55,6 +57,7 @@ b8 cpu_step()
   emu_cycles(1);
   fetch_data();
 
+#if CPU_DEBUG == 1
   char flags[16];
 
   sprintf(flags,
@@ -83,6 +86,8 @@ b8 cpu_step()
          ctx.regs.e,
          ctx.regs.h,
          ctx.regs.l);
+
+#endif
 
   if (ctx.cur_inst == NULL)
   {

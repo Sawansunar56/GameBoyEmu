@@ -19,7 +19,7 @@ typedef struct {
     u16 global_checksum;
 } rom_header;
 
-b8 cart_load(char *cart);
+PURE b8 cart_load(char *cart);
 
-u8 cart_read(u16 address);
+PURE u8 cart_read(u16 address);
 void cart_write(u16 address, u8 value);

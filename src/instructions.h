@@ -122,6 +122,6 @@ typedef struct
 
 struct cpu_context;
 
-instruction *instruction_by_opcode(u8 opcode);
-std::string inst_name(in_type t);
-std::string inst_to_str(cpu_context *ctx);
+PURE instruction *instruction_by_opcode(u8 opcode);
+PURE std::string inst_name(in_type t);
+PURE std::string inst_to_str(cpu_context *ctx);

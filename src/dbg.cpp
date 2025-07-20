@@ -17,7 +17,7 @@ void dbg_update()
 }
 void dbg_print()
 {
-  if(dbg_msg[0]) {
-    printf("DBG: %s\n", dbg_msg);
-  }
+  // if(dbg_msg[0]) {
+  //   printf("DBG: %s\n", dbg_msg);
+  // }
 }

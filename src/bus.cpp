@@ -31,7 +31,7 @@ u8 bus_read(u16 address)
  else if (address < 0xA000)
  {
   // char/ map data
-   ppu_vram_read(address);
+   return ppu_vram_read(address);
  }
  else if (address < 0xC000)
  {

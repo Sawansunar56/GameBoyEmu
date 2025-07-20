@@ -2,12 +2,12 @@
 #include "base_core.h"
 #include "cpu.h"
 #include "dma.h"
+#include "lcd.h"
 #include "timer.h"
 #include <cstdio>
 
 glob char serial_data[2];
 
-u8 ly = 0;
 u8 io_read(u16 address)
 {
  if (address == 0xff01)
@@ -30,8 +30,9 @@ u8 io_read(u16 address)
   return cpu_get_int_flags();
  }
 
- if(address == 0xff44) {
-   return ly++;
+ if (BETWEEN(address, 0xff40, 0xff4b))
+ {
+   return lcd_read(address);
  }
 
 
@@ -63,10 +64,9 @@ void io_write(u16 address, u8 value)
   cpu_set_int_flags(value);
  }
 
- if (address == 0xff46)
+ if (BETWEEN(address, 0xff40, 0xff4b))
  {
-  dma_start(value);
-  printf("DMA start\n");
+   lcd_write(address, value);
  }
 
  printf("UNSUPPORTED bus_write(%04X)\n", address);
