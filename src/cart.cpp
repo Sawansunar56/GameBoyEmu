@@ -1,8 +1,10 @@
 #include "cart.h"
+#include "base_core.h"
 #include "base_memory.h"
 #include <cstdio>
 #include <cstdlib>
 #include <array>
+#include <cstring>
 #include <string>
 
 typedef struct
@@ -11,9 +13,30 @@ typedef struct
  u32 rom_size;
  u8 *rom_data;
  rom_header *header;
+
+ b8 ram_enabled;
+ b8 ram_banking;
+
+ u8 *rom_bank_x;
+ u8 banking_mode;
+
+ u8 rom_bank_value;
+ u8 ram_bank_value;
+
+ u8 *ram_bank;
+ u8 *ram_banks[16];
+
+ b8 battery;
+ b8 need_save;
 } cart_context;
 
 glob cart_context ctx;
+
+b8 cart_need_save() { return ctx.need_save; }
+
+pure_function b8 cart_mbc1() { return BETWEEN(ctx.header->type, 1, 3); }
+
+pure_function b8 cart_battery() { return ctx.header->type == 3; }
 
 glob const char *ROM_TYPES[] = {
     "ROM ONLY",
@@ -121,6 +144,47 @@ glob const std::array<std::string, 0xA5> LIC_CODE = []() {
  return arr;
 }();
 
+void cart_battery_load()
+{
+ if (!ctx.ram_bank)
+ {
+  return;
+ }
+ char fn[1048];
+ sprintf(fn, "%s.battery", ctx.filename);
+
+ FILE *fp = fopen(fn, "rb");
+
+ if (!fp)
+ {
+  fprintf(stderr, "FAILED TO OPEN FOR LOAD: %s\n", fn);
+  return;
+ }
+ fread(ctx.ram_bank, 0x2000, 1, fp);
+ fclose(fp);
+}
+
+void cart_battery_save()
+{
+ if (!ctx.ram_bank)
+ {
+  return;
+ }
+ char fn[1048];
+ sprintf(fn, "%s.battery", ctx.filename);
+
+ FILE *fp = fopen(fn, "wb");
+
+ if (!fp)
+ {
+  fprintf(stderr, "FAILED TO OPEN FOR SAVE: %s\n", fn);
+  return;
+ }
+
+ fwrite(ctx.ram_bank, 0x2000, 1, fp);
+ fclose(fp);
+}
+
 function const std::string cart_lic_name()
 {
  if (ctx.header->new_lic_code <= 0xA4)
@@ -139,6 +203,26 @@ function const char *cart_type_name()
  }
 
  return "UNKNOWN";
+}
+
+function void cart_setup_banking()
+{
+ for (int i = 0; i < 16; i++)
+ {
+  ctx.ram_banks[i] = nullptr;
+
+  if ((ctx.header->ram_size == 2 && i == 0) ||
+      (ctx.header->ram_size == 3 && i < 4) ||
+      (ctx.header->ram_size == 4 && i < 16) ||
+      (ctx.header->ram_size == 5 && i < 8))
+  {
+   ctx.ram_banks[i] = static_cast<u8 *>(malloc(0x2000));
+   memset(ctx.ram_banks[i], 0, 0x2000);
+  }
+ }
+
+ ctx.ram_bank   = ctx.ram_banks[0];
+ ctx.rom_bank_x = ctx.rom_data + 0x4000;
 }
 
 b8 cart_load(char *cart)
@@ -166,6 +250,8 @@ b8 cart_load(char *cart)
 
  ctx.header            = (rom_header *)(ctx.rom_data + 0x100);
  ctx.header->title[15] = 0;
+ ctx.battery           = cart_battery();
+ ctx.need_save         = false;
 
  printf("Cartridge Loaded:\n");
  printf("\t Title    : %s\n", ctx.header->title);
@@ -177,6 +263,8 @@ b8 cart_load(char *cart)
         cart_lic_name().c_str());
  printf("\t ROM Vers : %2.2X\n", ctx.header->version);
 
+ cart_setup_banking();
+
  u16 x = 0;
  for (u16 i = 0x0134; i <= 0x014c; i++)
  {
@@ -187,17 +275,116 @@ b8 cart_load(char *cart)
         ctx.header->checksum,
         (x & 0xFF) ? "PASSED" : "FAILED");
 
+ if (ctx.battery)
+ {
+  cart_battery_load();
+ }
+
  return true;
 }
 
 u8 cart_read(u16 address)
 {
- // ROM ONLY type supported
- return ctx.rom_data[address];
+ if (!cart_mbc1() || address < 0x4000)
+ {
+  return ctx.rom_data[address];
+ }
+
+ if ((address & 0xE000) == 0xA000)
+ {
+  if (!ctx.ram_enabled)
+  {
+   return 0xff;
+  }
+
+  if (!ctx.ram_bank)
+  {
+   return 0xff;
+  }
+
+  return ctx.ram_bank[address - 0xA000];
+ }
+
+ return ctx.rom_bank_x[address - 0x4000];
 }
 
 void cart_write(u16 address, u8 value)
 {
- printf("cart_write(%04X)\n", address);
- // NO_IMPL
+ if (!cart_mbc1())
+ {
+  return;
+ }
+
+ if (address < 0x2000)
+ {
+  ctx.ram_enabled = ((value & 0xf) == 0xA);
+ }
+
+ if ((address & 0xE000) == 0x2000)
+ {
+  // rom bank number
+  if (value == 0)
+  {
+   value = 1;
+  }
+
+  value &= 0b11111;
+
+  ctx.rom_bank_value = value;
+  ctx.rom_bank_x     = ctx.rom_data + (0x4000 * ctx.rom_bank_value);
+ }
+
+ if ((address & 0xE000) == 0x4000)
+ {
+  // ram bank number
+
+  ctx.ram_bank_value = value & 0b11;
+
+  if (ctx.ram_banking)
+  {
+   if (cart_need_save())
+   {
+    cart_battery_save();
+   }
+   ctx.ram_bank = ctx.ram_banks[ctx.ram_bank_value];
+  }
+ }
+
+ if ((address & 0xE000) == 0x6000)
+ {
+  // banking mode selected
+
+  ctx.banking_mode = value & 1;
+
+  ctx.ram_banking = ctx.banking_mode;
+
+  if (ctx.ram_banking)
+  {
+   if (cart_need_save())
+   {
+    cart_battery_save();
+   }
+   ctx.ram_bank = ctx.ram_banks[ctx.ram_bank_value];
+  }
+ }
+
+ if ((address & 0xE000) == 0xA000)
+ {
+  if (!ctx.ram_enabled)
+  {
+   return;
+  }
+
+  if (!ctx.ram_bank)
+  {
+   return;
+  }
+
+  ctx.ram_bank[address - 0xA000] = value;
+
+  if (ctx.battery)
+  {
+   ctx.need_save = true;
+  }
+ }
 }

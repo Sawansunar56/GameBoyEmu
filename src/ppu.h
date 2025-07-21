@@ -49,14 +49,22 @@ struct oam_entry
  u8 y;
  u8 x;
  u8 tile;
- u8 flags;
+ // u8 flags;
 
- unsigned f_cgb_pn : 3;
- unsigned f_cgb_vram_bank : 1;
- unsigned f_pn : 1;
- unsigned f_x_flip : 1;
- unsigned f_y_flip : 1;
- unsigned f_bgp : 1;
+ // NOTE: SOWN this seems to be a weird error. if you use only unsigned, it caused
+ // the size of the struct to be expanded up to 8bytes which shouldn't happen and 
+ // should be only 4 bytes.  probably because 
+ u8 f_cgb_pn : 3;
+ u8 f_cgb_vram_bank : 1;
+ u8 f_pn : 1;
+ u8 f_x_flip : 1;
+ u8 f_y_flip : 1;
+ u8 f_bgp : 1;
+};
+
+struct oam_line_entry {
+  oam_entry entry;
+  oam_line_entry* next;
 };
 
 struct ppu_context
@@ -64,6 +72,14 @@ struct ppu_context
  oam_entry oam_ram[40];
  u8 vram[0x2000];
 
+ u8 line_sprite_count; // 0 to 10 sprites
+ oam_line_entry *line_sprites; // linked list of current sprites on line.
+ oam_line_entry line_entry_array[10]; // memory to use for list.
+
+ u8 fetched_entry_count;
+ oam_entry fetched_entries[3]; // entires fetched during pipeline
+
+ u8 window_line;
  pixel_fifo_context pfc;
 
  u32 current_frame;
