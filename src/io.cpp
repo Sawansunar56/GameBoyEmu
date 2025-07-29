@@ -1,4 +1,5 @@
 #include "io.h"
+#include "audio.h"
 #include "base_core.h"
 #include "cpu.h"
 #include "gamepad.h"
@@ -37,6 +38,7 @@ u8 io_read(u16 address)
  if (BETWEEN(address, 0xff10, 0xff3f))
  {
    // ignore sound
+   audio_handle(address);
    return 0;
  }
 
