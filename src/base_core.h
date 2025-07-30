@@ -29,11 +29,11 @@ typedef uintptr_t umm;
 typedef intptr_t smm;
 
 #define inline_function inline static
-#define function               static
-#define glob                   static
-#define locals                 static
+#define function static
+#define glob static
+#define locals static
 
-#define PURE          [[nodiscard]]
+#define PURE [[nodiscard]]
 #define pure_function [[nodiscard]] static
 
 // #define TRUE  1
@@ -54,6 +54,7 @@ typedef intptr_t smm;
   fprintf(stderr, "NOT YET IMPLEMENTED\n");                                    \
   exit(-5);                                                                    \
  };
+
 
 // static_assert(sizeof(u8)  == 1, "u8  is not 8  bit");
 // static_assert(sizeof(u16) == 2, "u16 is not 16 bit");

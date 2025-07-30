@@ -33,8 +33,8 @@ struct SquareChannel
  u8 length_raw;
  u8 volume_raw;
 
- u8 freq_low_raw; // 8 bits of the 11 bit period value
- u8 freq_high_raw;   //
+ u8 freq_low_raw;  // 8 bits of the 11 bit period value
+ u8 freq_high_raw; //
 
  // sweep values
  u8 sweep_pace;
@@ -44,26 +44,59 @@ struct SquareChannel
  // length values
  u8 length_wave_duty;
  u8 length_intial_timer;
+
+ // volume
+ u8 initial_volume;
+ u8 env_dir;
+ u8 volume_sweep_pace;
+
+ // frequency
+ u16 frequency;
+ u8 length_enable;
+ u8 freq_trigger;
+
+ u8 ticks;
 };
 
 struct WaveChannel
 {
+  u8 dac_raw;
+
  u8 dac_enable;
- u8 length; // write only
+ u8 length_timer; // write only
+ u8 output_level_raw;
+
  u8 output_level;
 
- u8 frequency;
- u8 control;
+ u8 freq_low_raw;
+ u8 freq_high_raw;
+
+ u16 frequency;
+ u8 length_enable;
+ u8 freq_trigger;
+
  // wave pattern RAM
+ u8 wave_ram[16];
 };
 
 struct NoiseChannel
 {
- u8 fake;
- u8 length;
- u8 volume;
- u8 frequency;
- u8 control;
+ u8 length_timer;
+ u8 volume_raw;
+
+ u8 initial_volume;
+ u8 env_dir;
+ u8 volume_sweep_pace;
+
+ u8 frequency_raw;
+
+ u8 clock_shift;
+ u8 lfsr_width;
+ u8 clock_divider;
+
+ u8 control_raw;
+ u8 freq_trigger;
+ u8 length_enable;
 };
 
 struct APU
@@ -80,3 +113,4 @@ struct APU
 
 PURE u8 audio_read(u16 addr);
 void audio_write(u16 addr, u8 value);
+void audio_tick();
