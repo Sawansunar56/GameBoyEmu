@@ -1,6 +1,7 @@
 #include "audio.h"
 #include "base_core.h"
 #include "bit_constants.h"
+#include "gameboy_constants.h"
 #include <cstdlib>
 
 constexpr s32 sampleRate      = 44100;
@@ -162,6 +163,267 @@ void audio_write(u16 addr, u8 value)
   NO_IMPL
  }
 }
+
+f32 audio_mix_channels()
+{
+ f32 Result = 0.f;
+
+ return Result;
+}
+
+f32 get_square_output(SquareChannel *ch)
+{
+ if (!ch->freq_trigger)
+  return 0.0f;
+
+ // 8-step waveform duty patterns (only 4 used)
+ static const u8 duty_table[4][8] = {
+     {0, 0, 0, 0, 0, 0, 0, 1}, // 12.5%
+     {1, 0, 0, 0, 0, 0, 0, 1}, // 25%
+     {1, 0, 0, 0, 0, 1, 1, 1}, // 50%
+     {0, 1, 1, 1, 1, 1, 1, 0}  // 75%
+ };
+
+ int duty  = ch->length_wave_duty >> 6; // top 2 bits
+ int index = ch->length_wave_duty & 7;
+
+ u8 waveform = duty_table[duty][index];
+ float amp   = waveform ? ch->initial_volume / 15.0f : 0.0f;
+
+ return amp;
+}
+
+f32 get_wave_output(WaveChannel *ch)
+{
+ if (!ch->freq_trigger || !ch->dac_enable)
+  return 0.0f;
+
+ u8 sample = get_wave_channel_sample(ch, ch->wave_pos);
+ return sample / 15.0f;
+}
+
+float get_noise_output(NoiseChannel *ch)
+{
+ if (!ch->freq_trigger)
+  return 0.0f;
+
+ extern u16 lfsr;
+ float amp = (~lfsr & 1) ? ch->initial_volume / 15.0f : 0.0f;
+ return amp;
+}
+
 void audio_tick()
 {
+ persist s32 frame_seq_counter = 0;
+ persist s32 sample_counter    = 0;
+
+ frame_seq_counter += 1;
+ sample_counter += 1;
+
+ constexpr s32 frame_seq_tick = (Gameboy::CLOCK / 512);
+ constexpr s32 sample_tick    = (Gameboy::CLOCK / Gameboy::HD_SAMPLING_RATE);
+ if (frame_seq_counter >= frame_seq_tick)
+ {
+  frame_seq_counter -= frame_seq_tick;
+  frame_sequencer_tick();
+ }
+
+ if (sample_counter >= sample_tick)
+ {
+  sample_counter -= sample_tick;
+  f32 sample = audio_mix_channels();
+ }
+
+ square_channel_tick(&ctx.channel_1);
+ square_channel_tick(&ctx.channel_2);
+ wave_channel_tick();
+ noise_channel_tick();
+}
+
+void frame_sequencer_tick()
+{
+ square_channel_length_tick(&ctx.channel_1);
+ square_channel_length_tick(&ctx.channel_2);
+ wave_channel_length_tick();
+ noise_channel_length_tick();
+
+ square_channel_envelope_tick(&ctx.channel_1);
+ square_channel_envelope_tick(&ctx.channel_2);
+ noise_channel_envelope_tick();
+
+ square_channel_sweep_tick();
+}
+
+void square_channel_sweep_tick()
+{
+ SquareChannel *ch = &ctx.channel_1;
+
+ persist u8 sweep_timer = 0;
+
+ if (ch->sweep_pace == 0 && ch->sweep_step == 0)
+  return;
+
+ sweep_timer--;
+
+ if (sweep_timer == 0)
+ {
+  sweep_timer = ch->sweep_pace == 0 ? 8 : ch->sweep_pace;
+
+  u16 delta = ch->frequency >> ch->sweep_step;
+  u16 new_freq =
+      ch->sweep_direction ? ch->frequency - delta : ch->frequency + delta;
+
+  if (new_freq > 2047)
+  {
+   ch->freq_trigger = 0;
+  }
+  else
+  {
+   ch->frequency = new_freq;
+
+   ch->freq_low_raw  = new_freq & 0xff;
+   ch->freq_high_raw = (ch->freq_high_raw & 0xF8) | ((new_freq >> 8) & 0x07);
+  }
+ }
+}
+
+void square_channel_tick(SquareChannel *ch)
+{
+ if (!ch->freq_trigger)
+  return;
+
+ ch->ticks--;
+ if (ch->ticks == 0)
+ {
+  ch->ticks = (2048 - ch->frequency) * 4;
+
+  ch->length_wave_duty = (ch->length_wave_duty + 1) % 8;
+ }
+}
+
+constexpr u8 noise_divisor_lut[] = {8, 16, 32, 48, 64, 80, 96, 112};
+
+void noise_channel_tick()
+{
+ NoiseChannel *ch = &ctx.noise_channel;
+
+ persist u16 lfsr        = 0x7fff;
+ persist u16 noise_timer = 0;
+
+ if (!ch->freq_trigger)
+  return;
+
+ noise_timer--;
+
+ if (noise_timer == 0)
+ {
+  noise_timer = noise_divisor_lut[ch->clock_divider] << ch->clock_shift;
+
+  u8 xor_result = ((lfsr & 1) ^ (lfsr >> 1) & 1);
+  lfsr >>= 1;
+  lfsr |= xor_result << 14;
+
+  if (ch->lfsr_width)
+  {
+   lfsr &= ~(1 << 6);
+   lfsr |= xor_result << 5;
+  }
+ }
+}
+
+void wave_channel_tick()
+{
+ WaveChannel *ch = &ctx.wave_channel;
+ if (!ch->freq_trigger || !ch->dac_enable)
+  return;
+
+ ch->wave_timer--;
+
+ if (ch->wave_timer == 0)
+ {
+  ch->wave_timer = (2048 - ch->frequency) * 2;
+  ch->wave_pos   = (ch->wave_pos + 1) % 32;
+ }
+}
+
+void square_channel_envelope_tick(SquareChannel *ch)
+{
+ if (ch->volume_sweep_pace == 0)
+  return;
+
+ persist u8 envelope_timer = 0;
+
+ envelope_timer++;
+ if (envelope_timer >= ch->volume_sweep_pace)
+ {
+  envelope_timer = 0;
+
+  if (ch->env_dir && ch->initial_volume < 15)
+   ch->initial_volume++;
+  else if (!ch->env_dir && ch->initial_volume > 0)
+  {
+   ch->initial_volume--;
+  }
+ }
+}
+
+void noise_channel_envelope_tick()
+{
+ NoiseChannel *ch = &ctx.noise_channel;
+
+ if (ch->volume_sweep_pace == 0)
+  return;
+
+ ch->ticks++;
+ if (ch->ticks >= ch->volume_sweep_pace)
+ {
+  ch->ticks = 0;
+
+  if (ch->env_dir && ch->initial_volume < 15)
+   ch->initial_volume++;
+  else if (!ch->env_dir && ch->initial_volume > 0)
+  {
+   ch->initial_volume--;
+  }
+ }
+}
+
+void square_channel_length_tick(SquareChannel *ch)
+{
+ if (ch->length_enable && ch->length_intial_timer > 0)
+ {
+  ch->length_intial_timer--;
+  if (ch->length_intial_timer == 0)
+  {
+   ch->freq_trigger = 0;
+  }
+ }
+}
+
+void wave_channel_length_tick()
+{
+ WaveChannel *ch = &ctx.wave_channel;
+
+ if (ch->length_enable && ch->length_timer > 0)
+ {
+  ch->length_timer--;
+  if (ch->length_timer == 0)
+  {
+   ch->freq_trigger = 0;
+  }
+ }
+}
+
+void noise_channel_length_tick()
+{
+ NoiseChannel *ch = &ctx.noise_channel;
+
+ if (ch->length_enable && ch->length_timer > 0)
+ {
+  ch->length_timer--;
+  if (ch->length_timer == 0)
+  {
+   ch->freq_trigger = 0;
+  }
+ }
 }

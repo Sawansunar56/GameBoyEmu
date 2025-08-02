@@ -1,39 +1,47 @@
 #pragma once
 #include <cstdint>
 #include <cstdio>
+#include <cstddef>
 
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
+typedef uint8_t    u8;
+typedef uint16_t   u16;
+typedef uint32_t   u32;
+typedef uint64_t   u64;
 
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
+typedef int8_t     i8;
+typedef int16_t    i16;
+typedef int32_t    i32;
+typedef int64_t    i64;
 
-typedef i8 b8;
-typedef i16 b16;
-typedef i32 b32;
-typedef i64 b64;
+typedef i8         b8;
+typedef i16        b16;
+typedef i32        b32;
+typedef i64        b64;
 
-typedef i8 s8;
-typedef i16 s16;
-typedef i32 s32;
-typedef i64 s64;
+typedef i8         s8;
+typedef i16        s16;
+typedef i32        s32;
+typedef i64        s64;
 
-typedef float f32;
-typedef double f64;
+typedef float      f32;
+typedef double     f64;
 
-typedef uintptr_t umm;
-typedef intptr_t smm;
+typedef uintptr_t  umm;
+typedef intptr_t   smm;
 
-#define inline_function inline static
-#define function static
-#define glob static
-#define locals static
+typedef uintptr_t  uptr;
+typedef uint64_t   usize;
+typedef size_t     isize;
 
-#define PURE [[nodiscard]]
+#define inline_function   inline static
+
+#define function         static
+#define glob             static
+#define persist          static 
+#define ONCE             static // for variables that are declared only once
+#define shared           static // class static
+
+#define PURE          [[nodiscard]]
 #define pure_function [[nodiscard]] static
 
 // #define TRUE  1

@@ -2,6 +2,7 @@
 #include <chrono>
 #include <stdio.h>
 #include "emu.h"
+#include "audio.h"
 #include "cart.h"
 #include "cpu.h"
 #include "dma.h"
@@ -111,6 +112,7 @@ void emu_cycles(i32 cpu_cycles)
    ctx.ticks++;
    timer_tick();
    ppu_tick();
+   audio_tick();
   }
 
   dma_tick();

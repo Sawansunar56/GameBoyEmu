@@ -60,7 +60,7 @@ struct SquareChannel
 
 struct WaveChannel
 {
-  u8 dac_raw;
+ u8 dac_raw;
 
  u8 dac_enable;
  u8 length_timer; // write only
@@ -77,6 +77,9 @@ struct WaveChannel
 
  // wave pattern RAM
  u8 wave_ram[16];
+
+ u8 wave_pos;
+ u16 wave_timer;
 };
 
 struct NoiseChannel
@@ -97,6 +100,8 @@ struct NoiseChannel
  u8 control_raw;
  u8 freq_trigger;
  u8 length_enable;
+
+ u8 ticks;
 };
 
 struct APU
@@ -114,3 +119,17 @@ struct APU
 PURE u8 audio_read(u16 addr);
 void audio_write(u16 addr, u8 value);
 void audio_tick();
+pure_function f32 audio_mix_channels();
+
+function void square_channel_tick(SquareChannel *ch);
+function void noise_channel_tick();
+function void wave_channel_tick();
+
+function void square_channel_envelope_tick(SquareChannel *ch);
+function void square_channel_length_tick(SquareChannel *ch);
+function void frame_sequencer_tick();
+
+function void wave_channel_length_tick();
+function void noise_channel_length_tick();
+function void noise_channel_envelope_tick();
+function void square_channel_sweep_tick();

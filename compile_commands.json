@@ -1,6 +1,12 @@
 [
 {
 "directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/audio.obj -c F:/Projects/C/gba_emu/src/audio.cpp", 
+"file": "F:/Projects/C/gba_emu/src/audio.cpp"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
 "command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/bus.obj -c F:/Projects/C/gba_emu/src/bus.cpp", 
 "file": "F:/Projects/C/gba_emu/src/bus.cpp"
 },
@@ -37,14 +43,50 @@
 
 {
 "directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/dbg.obj -c F:/Projects/C/gba_emu/src/dbg.cpp", 
+"file": "F:/Projects/C/gba_emu/src/dbg.cpp"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/dma.obj -c F:/Projects/C/gba_emu/src/dma.cpp", 
+"file": "F:/Projects/C/gba_emu/src/dma.cpp"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
 "command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/emu.obj -c F:/Projects/C/gba_emu/src/emu.cpp", 
 "file": "F:/Projects/C/gba_emu/src/emu.cpp"
 },
 
 {
 "directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/gamepad.obj -c F:/Projects/C/gba_emu/src/gamepad.cpp", 
+"file": "F:/Projects/C/gba_emu/src/gamepad.cpp"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
 "command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/instructions.obj -c F:/Projects/C/gba_emu/src/instructions.cpp", 
 "file": "F:/Projects/C/gba_emu/src/instructions.cpp"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/interrupts.obj -c F:/Projects/C/gba_emu/src/interrupts.cpp", 
+"file": "F:/Projects/C/gba_emu/src/interrupts.cpp"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/io.obj -c F:/Projects/C/gba_emu/src/io.cpp", 
+"file": "F:/Projects/C/gba_emu/src/io.cpp"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/lcd.obj -c F:/Projects/C/gba_emu/src/lcd.cpp", 
+"file": "F:/Projects/C/gba_emu/src/lcd.cpp"
 },
 
 {
@@ -57,6 +99,18 @@
 "directory": "F:/Projects/C/gba_emu/src",
 "command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/ppu.obj -c F:/Projects/C/gba_emu/src/ppu.cpp", 
 "file": "F:/Projects/C/gba_emu/src/ppu.cpp"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/ppu_pipeline.obj -c F:/Projects/C/gba_emu/src/ppu_pipeline.cpp", 
+"file": "F:/Projects/C/gba_emu/src/ppu_pipeline.cpp"
+},
+
+{
+"directory": "F:/Projects/C/gba_emu/src",
+"command": "clangd -xc++ -std=c++20 -IF:/Projects/C/gba_emu/vendor/SDL2/include -IF:/Projects/C/gba_emu/vendor/SDL2_ttf/include -IF:/Projects/C/gba_emu/vendor/check -DSDL_MAIN_HANDLED -o F:/Projects/C/gba_emu/src/ppu_sm.obj -c F:/Projects/C/gba_emu/src/ppu_sm.cpp", 
+"file": "F:/Projects/C/gba_emu/src/ppu_sm.cpp"
 },
 
 {
